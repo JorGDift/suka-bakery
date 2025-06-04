@@ -1,0 +1,141 @@
+{% extends 'suka_admin/base.html' %}
+
+{% block quotation_detail %}
+<div class="container-sm my-5">
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+
+            <!-- Botón para regresar -->
+            <div class="row mb-5">
+                <div class="col d-flex px-0">
+                    <a href="{% url 'quoteApp:suka_admin_quotation_list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                        <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                        Regresar
+                    </a>
+                </div>
+            </div>
+            <!-- Header del pedido -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary-strong text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0">Pedido #{{ order.order_number }}</h2>
+                        <span class="badge bg-{% if order.status == 'delivered' %}success{% elif order.status == 'canceled' %}danger{% else %}warning{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Fecha del pedido:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Última actualización:</strong> {{ order.updated_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <p class="h5">Total del pedido</p>
+                            <p class="h3 text-primary-strong">${{ order.total }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items del pedido -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="h6 mb-0">Productos</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Tamaño</th>
+                                    <th class="text-center">Decoración</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detail in order.details.all %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ detail.product.name }}</strong>
+                                        {% if detail.product.description %}
+                                        <p class="small text-muted mb-0">{{ detail.product.description }}</p>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ detail.cake_flavor.name }}<br>
+                                        <span class="badge bg-secondary">{{ detail.cake_size.name }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        ${{ detail.decoration_price }}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ detail.quantity }}
+                                    </td>
+                                    <td class="text-end">
+                                        ${{ detail.item_total }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td class="text-end">${{ order.subtotal }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Envío:</strong></td>
+                                    <td class="text-end">${{ order.delivery.cost }}</td>
+                                </tr>
+                                <tr class="table-active">
+                                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-end"><strong>${{ order.total }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos de envío -->
+            {% if order.delivery %}
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h3 class="h6 mb-0">Información de envío</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Estado del envío:</strong>
+                                    <span class="badge bg-{% if order.delivery.status == 'delivered' %}success{% elif order.delivery.status == 'canceled' %}danger{% else %}warning{% endif %}">
+                                        {{ order.delivery.get_status_display }}
+                                    </span>
+                                </p>
+                                <p><strong>Fecha estimada de entrega:</strong>
+                                    {% if order.delivery.delivery_date %}
+                                        {{ order.delivery.delivery_date|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        Por confirmar
+                                    {% endif %}
+                                </p>
+                                <p><strong>Costo de envío:</strong> ${{ order.delivery.cost }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Dirección de envío:</strong></p>
+                                <address>
+                                    {{ order.delivery.street }} {{ order.delivery.ext_number }}<br>
+                                    {% if order.delivery.int_number %}Int. {{ order.delivery.int_number }}<br>{% endif %}
+                                    {{ order.delivery.neighborhood }}<br>
+                                </address>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock quotation_detail %}

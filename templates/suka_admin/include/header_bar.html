@@ -1,0 +1,44 @@
+<!--content header -->
+<div class="d-flex justify-content-between flex-lg-row-reverse mb-5">
+    <div>
+        <div>
+            <div class="dropdown hover-bg-white-6 rounded-2 hover-scale-1">
+                <button class="btn dropdown-toggle d-flex align-items-center gap-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if request.user.avatar %}
+                        <img class="img-fluid object-fit-cover rounded-circle" src="{{ request.user.avatar.url }}" alt="img" style="height: 2.7rem; width: 2.7rem">
+                    {% else %}
+                        <img class="img-fluid object-fit-cover rounded-circle" src="https://cdn-icons-png.flaticon.com/512/6326/6326055.png" alt="img" style="height: 2.7rem; width: 2.7rem">
+                    {% endif %}
+
+                    <!--<i class="fi fi-rr-circle-user text-dark-2" style="font-size: 2rem;"></i>-->
+                    <div class="d-flex flex-column text-start">
+                        <p class="mb-0 fw-light text-dark-5 fs-7">{{ request.user.name }}</p>
+                    </div>
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end px-2">
+                    <li><a class="dropdown-item p-0" href="#">Mi perfil</a></li>
+                    <li><a class="dropdown-item p-0" target="_blank" href="{% url 'coreApp:Home' %}">Ver web</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item p-0 text-danger d-flex gap-3" href="{% url 'usersApp:custom-admin-logout' %}">Cerrar sesión<i class="fi fi-rr-exit"></i></a></li>
+                </ul>
+              </div>
+        </div>
+    </div>
+    <div class="mt-4 d-lg-none">
+        <!--btn open close sliderbar para mobile -->
+        <div class="d-flex justify-content-center">
+            <button id="mobile-btn-activate-sliderbar" class="navbar-toggler border-0 shadow-none">
+                <div class="demo">
+                    <div class="menu-icon">
+                        <input class="menu-icon__cheeckbox" type="checkbox" />
+                        <div>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>

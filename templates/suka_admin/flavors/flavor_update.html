@@ -1,0 +1,124 @@
+{% extends 'suka_admin/base.html' %}
+{% load widget_tweaks %}
+
+{% block flavor_update %}
+    <section class="container-fluid">
+        <div class="container-lg">
+            <!-- Botón para regresar -->
+            <div class="row px-0">
+                <div class="col d-flex px-0">
+                    <a href="{% url 'productApp:admin-flavor-list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                        <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                        Regresar
+                    </a>
+                </div>
+            </div>
+
+            <form class="row mt-4" method="post">
+                {% csrf_token %}
+                <div class="col px-0">
+                    <h1 class="fs-3 fw-lighter">Actualizar Sabor</h1>
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success text-white-2 d-flex align-items-center gap-2 shadow-sm hover-scale-1">
+                        <i class="fi fi-rr-check"></i>
+                        Actualizar Sabor
+                    </button>
+                </div>
+
+                <div class="row mt-5 gx-4 p-0">
+                    <div class="col rounded-2 px-0">
+                        <div class="bg-white-2 p-4 rounded-2">
+                            <h4>Información General</h4>
+                            <div class="row row-cols-1">
+                                <!-- Campo Nombre -->
+                                <div class="col col-4 mb-3">
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                            {% render_field form.name class="form-control" %}
+                                            {% if form.name.errors %}
+                                                <div class="invalid-feedback" style="display:block;">
+                                                    {% for error in form.name.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col col-4">
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            <label for="{{ form.price_per_slice.id_for_label }}" class="form-label">{{ form.price_per_slice.label }}</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                {% render_field form.price_per_slice class="form-control" placeholder="0.00" %}
+                                            </div>
+                                            {% if form.price_per_slice.errors %}
+                                                <div class="invalid-feedback" style="display:block;">
+                                                    {% for error in form.price_per_slice.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nameInput = document.querySelector('#{{ form.name.id_for_label }}');
+            const priceInput = document.querySelector('#{{ form.price_per_slice.id_for_label }}');
+
+            // Validación del nombre
+            nameInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                const isValidCharacters = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]*$/.test(value);
+                const hasMinLength = value.length >= 3;
+
+                if (!hasMinLength || !isValidCharacters) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                }
+            });
+
+            // Validación del precio
+            priceInput.addEventListener('input', function() {
+                const value = this.value;
+                const numValue = parseFloat(value);
+
+                // Validar formato de decimales
+                if (value.includes('.')) {
+                    const [, decimal] = value.split('.');
+                    if (decimal && decimal.length > 2) {
+                        this.value = numValue.toFixed(2);
+                    }
+                }
+
+                // Validaciones de rango y formato
+                const isValidRange = numValue >= 1 && numValue <= 1000;
+                const isValidFormat = /^\d*\.?\d{0,2}$/.test(value);
+
+                if (!isValidRange || !isValidFormat || isNaN(numValue)) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                }
+            });
+        });
+    </script>
+{% endblock flavor_update %}

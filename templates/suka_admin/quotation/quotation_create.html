@@ -1,0 +1,419 @@
+{% extends 'suka_admin/base.html' %}
+
+{% block quotation_create %}
+
+    <style>
+        .ticket-border {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .ticket-content {
+        padding: 15px;
+        background: white;
+        background-image: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(0,0,0,0.01) 10px,
+            rgba(0,0,0,0.01) 20px
+        );
+        border-radius: 6px;
+    }
+
+    </style>
+
+
+    <section class="container-fluid">
+        <div class="container-lg">
+            <!-- Botón para regresar -->
+            <div class="row px-0">
+                <div class="col d-flex px-0">
+                    <a href="{% url 'quoteApp:suka_admin_quotation_list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                        <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                        Regresar
+                    </a>
+                </div>
+            </div>
+
+            <form method="post" class="row mb-4 mt-3">
+                {% csrf_token %}
+                {{ formset.management_form }}
+
+                <div class="col">
+                    <h1 class="fs-3 fw-lighter">Crear Nueva Cotización</h1>
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success text-white-2 d-flex align-items-center gap-2 shadow-sm hover-scale-1">
+                        <i class="fi fi-rr-check"></i>
+                        Guardar Cotización
+                    </button>
+                </div>
+
+                <div class="row mt-5 gx-4 p-0">
+                    <!-- Columna del formulario -->
+                    <div class="col-8" id="quotation-forms">
+                        {% for form in formset %}
+                            <div class="quotation-form">
+                                {% if forloop.first %}
+                                    <!-- Información de Entrega -->
+                                    <div class="col-12 rounded-2 mb-4">
+                                        <div class="bg-white-2 p-4 rounded-2">
+                                            <h4>Información de Entrega</h4>
+                                            <div class="row mt-4">
+                                                <div class="col">
+                                                    {{ form.street.label_tag }}
+                                                    {{ form.street }}
+                                                </div>
+                                                <div class="col">
+                                                    {{ form.neighborhood.label_tag }}
+                                                    {{ form.neighborhood }}
+                                                </div>
+                                            </div>
+                                            <div class="row mt-4">
+                                                <div class="col">
+                                                    {{ form.ext_number.label_tag }}
+                                                    {{ form.ext_number }}
+                                                </div>
+                                                <div class="col">
+                                                    {{ form.int_number.label_tag }}
+                                                    {{ form.int_number }}
+                                                </div>
+                                            </div>
+                                            <div class="row mt-4">
+                                                <div class="col">
+                                                    {{ form.cost.label_tag }}
+                                                    {{ form.cost }}
+                                                </div>
+                                                <div class="col">
+                                                    {{ form.delivery_date.label_tag }}
+                                                    {{ form.delivery_date }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    {{ form.street.as_hidden }}
+                                    {{ form.neighborhood.as_hidden }}
+                                    {{ form.ext_number.as_hidden }}
+                                    {{ form.int_number.as_hidden }}
+                                    {{ form.cost.as_hidden }}
+                                    {{ form.delivery_date.as_hidden }}
+                                {% endif %}
+
+                                <!-- Información del Producto -->
+                                <div class="col-12 rounded-2 mb-4">
+                                    <div class="bg-white-2 p-4 rounded-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h4>Producto</h4>
+                                            {% if not forloop.first %}
+                                                <button type="button" class="btn btn-danger d-flex align-items-center gap-2 remove-form text-white-2 hover-scale-1 shadow-sm">
+                                                    <i class="fi fi-rr-trash text-white-2"></i>
+                                                    Eliminar producto
+                                                </button>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="row mt-4">
+                                            <div class="col">
+                                                {{ form.product.label_tag }}
+                                                {{ form.product }}
+                                            </div>
+                                            <div class="col">
+                                                {{ form.cake_flavor.label_tag }}
+                                                {{ form.cake_flavor }}
+                                            </div>
+                                        </div>
+                                        <div class="row mt-4">
+                                            <div class="col">
+                                                {{ form.cake_size.label_tag }}
+                                                {{ form.cake_size }}
+                                            </div>
+                                            <div class="col">
+                                                {{ form.decoration_price.label_tag }}
+                                                {{ form.decoration_price }}
+                                            </div>
+                                            <div class="col">
+                                                {{ form.quantity.label_tag }}
+                                                {{ form.quantity }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <!-- Botón para agregar más productos -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <button type="button" id="add-form" class="btn btn-secondary d-flex align-items-center gap-2 mx-auto hover-scale-1 shadow-sm">
+                                    <i class="fi fi-rr-plus"></i>
+                                    Agregar otro producto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna del ticket -->
+                    <div class="col-4">
+                        <div class="ticket-border sticky-top" style="top: -25px">
+                            <div class="ticket-content">
+                                <h4 class="border-bottom pb-3">Resumen de Cotización</h4>
+                                <div id="ticket-content" class="mt-4">
+                                    <div class="delivery-summary mb-4">
+                                        <h5 class="fs-6 fw-bold mb-3">Información de Entrega</h5>
+                                        <div class="text-muted">
+                                            <p class="mb-1" id="ticket-address">Dirección: <span>-</span></p>
+                                            <p class="mb-1" id="ticket-neighborhood">Colonia: <span>-</span></p>
+                                            <p class="mb-1" id="ticket-delivery-date">Fecha de entrega: <span>-</span></p>
+                                            <p class="mb-1" id="ticket-delivery-cost">Costo de envío: <span>-</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="products-summary">
+                                        <h5 class="fs-6 fw-bold mb-3">Productos</h5>
+                                        <div id="ticket-products" class="mb-3">
+                                            <!-- Los productos se agregarán dinámicamente aquí -->
+                                        </div>
+                                    </div>
+                                    <div class="totals border-top pt-3">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Subtotal:</span>
+                                            <span id="ticket-subtotal">$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Envío:</span>
+                                            <span id="ticket-shipping">$0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between fw-bold">
+                                            <span>Total:</span>
+                                            <span id="ticket-total">$0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addFormBtn = document.getElementById('add-form');
+            const formContainer = document.getElementById('quotation-forms');
+            const form = document.querySelector('form');
+
+            // Función para actualizar el ticket
+            function updateTicket() {
+                // Actualizar información de entrega
+                const street = document.querySelector('[name$="-street"]').value;
+                const neighborhood = document.querySelector('[name$="-neighborhood"]').value;
+                const extNumber = document.querySelector('[name$="-ext_number"]').value;
+                const intNumber = document.querySelector('[name$="-int_number"]').value;
+                const deliveryDate = document.querySelector('[name$="-delivery_date"]').value;
+                const deliveryCost = document.querySelector('[name$="-cost"]').value;
+
+                // Actualizar dirección en el ticket
+                document.getElementById('ticket-address').innerHTML = `Dirección: <span>${street} ${extNumber}${intNumber ? ` Int. ${intNumber}` : ''}</span>`;
+                document.getElementById('ticket-neighborhood').innerHTML = `Colonia: <span>${neighborhood}</span>`;
+                document.getElementById('ticket-delivery-date').innerHTML = `Fecha de entrega: <span>${deliveryDate}</span>`;
+                document.getElementById('ticket-delivery-cost').innerHTML = `Costo de envío: <span>$${deliveryCost}</span>`;
+
+                // Actualizar productos
+                const productsContainer = document.getElementById('ticket-products');
+                productsContainer.innerHTML = '';
+                let subtotal = 0;
+
+                document.querySelectorAll('.quotation-form').forEach((form) => {
+                    const product = form.querySelector('[name$="-product"]');
+                    const quantity = form.querySelector('[name$="-quantity"]');
+                    const decorationPrice = form.querySelector('[name$="-decoration_price"]');
+
+                    if (product.value && quantity.value) {
+                        const selectedProduct = product.options[product.selectedIndex].text;
+                        const productTotal = (parseFloat(decorationPrice.value) || 0) * parseInt(quantity.value);
+                        subtotal += productTotal;
+
+                        const productElement = document.createElement('div');
+                        productElement.className = 'mb-2';
+                        productElement.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <span>${selectedProduct} x${quantity.value}</span>
+                        <span>$${productTotal.toFixed(2)}</span>
+                    </div>
+                `;
+                        productsContainer.appendChild(productElement);
+                    }
+                });
+
+                // Actualizar totales
+                const shipping = parseFloat(deliveryCost) || 0;
+                document.getElementById('ticket-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+                document.getElementById('ticket-shipping').textContent = `$${shipping.toFixed(2)}`;
+                document.getElementById('ticket-total').textContent = `$${(subtotal + shipping).toFixed(2)}`;
+            }
+
+            function syncDeliveryFields() {
+                const fields = ['street', 'neighborhood', 'ext_number', 'int_number', 'cost', 'delivery_date'];
+                const forms = document.querySelectorAll('.quotation-form');
+                const firstFormValues = {};
+
+                // Obtener valores del primer formulario
+                fields.forEach(field => {
+                    firstFormValues[field] = document.querySelector(`[name="form-0-${field}"]`).value;
+                });
+
+                // Sincronizar valores en los demás formularios
+                forms.forEach((form, index) => {
+                    if (index > 0) {
+                        fields.forEach(field => {
+                            const input = form.querySelector(`[name="form-${index}-${field}"]`);
+                            if (input) {
+                                input.value = firstFormValues[field];
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Agregar el evento para sincronizar cuando cambien los campos de entrega
+            document.querySelectorAll('[name$="-street"], [name$="-neighborhood"], [name$="-ext_number"], [name$="-int_number"], [name$="-cost"], [name$="-delivery_date"]').forEach(input => {
+                input.addEventListener('change', syncDeliveryFields);
+            });
+
+
+            // Agregar nuevo formulario
+            addFormBtn.addEventListener('click', function() {
+                const forms = document.querySelectorAll('.quotation-form');
+                const totalFormsInput = document.querySelector('[name="form-TOTAL_FORMS"]');
+                const newIndex = parseInt(totalFormsInput.value);
+
+                // Crear nuevo contenedor para el formulario
+                const newFormContainer = document.createElement('div');
+                newFormContainer.className = 'quotation-form';
+
+                // Clonar la sección de producto del primer formulario
+                const productTemplate = document.querySelector('.quotation-form:first-child .col-12:last-child').cloneNode(true);
+
+                // Agregar el botón de eliminar en el encabezado del producto
+                const headerDiv = productTemplate.querySelector('.d-flex.justify-content-between.align-items-center');
+                headerDiv.innerHTML = `
+                    <h4>Producto</h4>
+                    <button type="button" class="btn btn-danger d-flex align-items-center gap-2 remove-form text-white-2 hover-scale-1 shadow-sm">
+                        <i class="fi fi-rr-trash text-white-2"></i>
+                        Eliminar producto
+                    </button>
+                `;
+
+                // Limpiar valores y actualizar índices
+                productTemplate.querySelectorAll('input, select').forEach(input => {
+                    const newName = input.name.replace(/-0-/, `-${newIndex}-`);
+                    input.name = newName;
+                    if (!input.name.endsWith('-quantity')) {  // No limpiar el campo quantity
+                        input.value = '';
+                    }
+                    if (input.id) {
+                        input.id = input.id.replace(/-0-/, `-${newIndex}-`);
+                    }
+                });
+
+
+                // Modifica la parte donde se agregan los campos ocultos en la función de agregar formulario
+                const fields = ['street', 'neighborhood', 'ext_number', 'int_number', 'cost', 'delivery_date'];
+                fields.forEach(field => {
+                    const originalValue = document.querySelector(`[name="form-0-${field}"]`).value;
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = `form-${newIndex}-${field}`;
+                    hiddenInput.value = originalValue;
+                    newFormContainer.appendChild(hiddenInput);
+                });
+
+
+                newFormContainer.appendChild(productTemplate);
+                formContainer.insertBefore(newFormContainer, addFormBtn.parentElement.parentElement);
+                totalFormsInput.value = newIndex + 1;
+
+                updateTicket();
+            });
+
+
+            // Eliminar formulario
+            formContainer.addEventListener('click', function(e) {
+                const removeButton = e.target.closest('.remove-form');
+                if (removeButton) {
+                    const forms = document.querySelectorAll('.quotation-form');
+                    if (forms.length > 1) {
+                        const formToRemove = removeButton.closest('.quotation-form');
+                        formToRemove.remove();
+                        updateFormIndices();
+                        updateTicket();
+                    }
+                }
+            });
+
+            // Actualizar índices de los formularios
+            function updateFormIndices() {
+                const forms = document.querySelectorAll('.quotation-form');
+                const totalFormsInput = document.querySelector('[name="form-TOTAL_FORMS"]');
+
+                forms.forEach((form, index) => {
+                    form.querySelectorAll('[name]').forEach(element => {
+                        element.name = element.name.replace(/-\d+-/, `-${index}-`);
+                        if (element.id) {
+                            element.id = element.id.replace(/-\d+-/, `-${index}-`);
+                        }
+                    });
+                });
+
+                totalFormsInput.value = forms.length;
+            }
+
+            // Validación antes del envío
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Actualizar índices
+                updateFormIndices();
+
+                // Validar campos requeridos
+                let isValid = true;
+                const requiredFields = ['product', 'cake_flavor', 'cake_size', 'quantity'];
+
+                // Validar productos
+                document.querySelectorAll('.quotation-form').forEach(form => {
+                    requiredFields.forEach(field => {
+                        const input = form.querySelector(`[name$="-${field}"]`);
+                        if (!input || !input.value.trim()) {
+                            if (input) input.classList.add('is-invalid');
+                            isValid = false;
+                        } else {
+                            if (input) input.classList.remove('is-invalid');
+                        }
+                    });
+                });
+
+                if (!isValid) {
+                    alert('Por favor, completa todos los campos requeridos.');
+                    return;
+                }
+
+                // Si todo está válido, enviar el formulario
+                this.submit();
+            });
+
+            // Actualizar ticket cuando cambian los valores
+            form.addEventListener('change', updateTicket);
+
+            // Inicializar el ticket
+            updateTicket();
+        });
+    </script>
+{% endblock quotation_create %}

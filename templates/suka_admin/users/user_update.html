@@ -1,0 +1,309 @@
+{% extends 'suka_admin/base.html' %}
+{% load widget_tweaks %}
+{% block user_update %}
+
+<section class="container-fluid">
+    <div class="container-lg">
+        <!-- Botón para regresar -->
+        <div class="row px-0">
+            <div class="col d-flex px-0">
+                <a href="{% url 'usersApp:custom-admin-user-list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                    <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                    Regresar
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulario principal -->
+        <form class="row mb-4 mt-3" method="post" enctype="multipart/form-data" id="userForm">
+            {% csrf_token %}
+
+            <div class="col">
+                <h1 class="fs-3 fw-lighter">Editar Usuario: {{ object.name|default:object.mail }}</h1>
+            </div>
+            <div class="col d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-success text-white-2 d-flex align-items-center gap-2 shadow-sm hover-scale-1">
+                    <i class="fi fi-rr-check"></i>
+                    Guardar Cambios
+                </button>
+               <!-- Agrega un botón/modal separado para cambio de contraseña -->
+                <div class="mt-4">
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                        <i class="fas fa-key"></i> Cambiar Contraseña
+                    </button>
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger mt-3">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="row mt-5 gx-4 p-0">
+                <div class="col rounded-2">
+                    <div class="bg-white-2 p-4 rounded-2">
+                        <h4>Información Básica</h4>
+                        <div class="row row-cols-1">
+                            <div class="col mt-2">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                {% render_field form.name class="form-control" placeholder="Ej: Juan" %}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback" style="display:block;">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col mt-4">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+                                {% render_field form.last_name class="form-control" placeholder="Ej: Pérez" %}
+                                {% if form.last_name.errors %}
+                                    <div class="invalid-feedback" style="display:block;">
+                                        {% for error in form.last_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row row-cols-2 mt-4">
+                            <div class="col mb-4">
+                                <label for="{{ form.mail.id_for_label }}" class="form-label">{{ form.mail.label }}</label>
+                                {% render_field form.mail class="form-control" placeholder="Ej: usuario@example.com" %}
+                                {% if form.mail.errors %}
+                                    <div class="invalid-feedback" style="display:block;">
+                                        {% for error in form.mail.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col mb-4">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                                {% render_field form.phone class="form-control" placeholder="Ej: +51987654321" %}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback" style="display:block;">
+                                        {% for error in form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col rounded-2 pe-0">
+                    <div class="bg-white-2 p-4 rounded-2">
+                        <h4>Foto de Perfil</h4>
+                        <div class="mb-3">
+                            <label for="{{ form.avatar.id_for_label }}" class="form-label">Imagen del usuario</label>
+
+                            <!-- Mostrar imagen actual si existe -->
+                            {% if object.avatar %}
+                                <div class="mb-3">
+                                    <img src="{{ object.avatar.url }}" alt="Foto actual" class="img-thumbnail mb-2" style="max-height: 150px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="avatar-clear" id="avatar-clear-id">
+                                        <label class="form-check-label text-danger" for="avatar-clear-id">
+                                            Eliminar foto actual
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="drop-zone">
+                                <span class="drop-zone__prompt">
+                                    <i class="fas fa-cloud-upload-alt fs-2 mb-2"></i>
+                                    <br>
+                                    Arrastra una nueva foto aquí o haz clic para seleccionar
+                                </span>
+                                {% render_field form.avatar %}
+                            </div>
+                            {% if form.avatar.errors %}
+                                <div class="invalid-feedback" style="display:block;">
+                                    {% for error in form.avatar.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div id="imageHelp" class="form-text mt-2">
+                                Formatos permitidos: JPG, PNG, JPEG. Máximo 5MB.
+                            </div>
+                        </div>
+                        <div id="imagePreview" class="row g-2 mt-2"></div>
+                    </div>
+
+                    <div class="bg-white-2 p-4 rounded-2 mt-4">
+                        <h4>Permisos</h4>
+                        <div class="form-check form-switch mt-3">
+                            {% render_field form.is_active class="form-check-input" %}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Activo</label>
+                        </div>
+                        <div class="form-text">Desmarcar para desactivar la cuenta temporalmente.</div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Modal para cambio de contraseña -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true" style="z-index: 9999">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="passwordModalLabel">
+                    <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'usersApp:custom-admin-password-user-update' object.pk %}" id="passwordChangeForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nueva Contraseña</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="new_password" name="new_password" required
+                                   pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                                   title="Debe contener al menos 8 caracteres, una mayúscula, una minúscula y un número">
+                        </div>
+                        <div class="form-text">Mínimo 8 caracteres con mayúsculas, minúsculas y números</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirmar Contraseña</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Manejo de drag and drop para imágenes (tu código existente)
+        const dropZone = document.querySelector('.drop-zone');
+        const fileInput = dropZone.querySelector('input[type="file"]');
+        const clearCheckbox = document.getElementById('avatar-clear-id');
+
+        ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        dropZone.addEventListener('dragover', () => {
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            dropZone.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            updateThumbnail(fileInput.files);
+            if (clearCheckbox) clearCheckbox.checked = false;
+        });
+
+        fileInput.addEventListener('change', function() {
+            updateThumbnail(this.files);
+            if (clearCheckbox) clearCheckbox.checked = false;
+        });
+
+        if (clearCheckbox) {
+            clearCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    document.getElementById('imagePreview').innerHTML = '';
+                    fileInput.value = '';
+                }
+            });
+        }
+
+        function updateThumbnail(files) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+
+            if (files && files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'col-12';
+                    div.innerHTML = `
+                        <div class="card border-0 shadow-sm">
+                            <img src="${e.target.result}" class="card-img-top" alt="Vista previa" style="max-height: 300px; object-fit: contain;">
+                            <div class="card-img-overlay d-flex align-items-end justify-content-end">
+                                <button type="button" class="btn btn-danger btn-sm rounded-circle" style="height: 2rem; width: 2rem">
+                                    <i class="fi fi-rr-trash text-white-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    preview.appendChild(div);
+
+                    div.querySelector('.btn-danger').addEventListener('click', () => {
+                        preview.innerHTML = '';
+                        fileInput.value = '';
+                    });
+                }
+                reader.readAsDataURL(files[0]);
+            }
+        }
+
+        // Validación en tiempo real
+        document.getElementById('passwordChangeForm').addEventListener('submit', function(e) {
+            const p1 = document.getElementById('new_password').value;
+            const p2 = document.getElementById('confirm_password').value;
+
+            if (p1 !== p2) {
+                e.preventDefault();
+                alert('Las contraseñas no coinciden');
+                return false;
+            }
+        });
+
+        // Validación de contraseña en el modal
+        const passwordForm = document.querySelector('#passwordModal form');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', function(e) {
+                const p1 = document.getElementById('new_password1').value;
+                const p2 = document.getElementById('new_password2').value;
+
+                if (p1 !== p2) {
+                    e.preventDefault();
+                    alert('Las contraseñas no coinciden');
+                    return false;
+                }
+
+                if (p1.length < 8) {
+                    e.preventDefault();
+                    alert('La contraseña debe tener al menos 8 caracteres');
+                    return false;
+                }
+            });
+        }
+    });
+</script>
+
+{% endblock user_update %}

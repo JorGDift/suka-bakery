@@ -1,0 +1,205 @@
+{% extends 'suka_admin/base.html' %}
+{% load static %}
+
+{% block user_list %}
+    <section class="container-sm px-0">
+        <!-- Botón para agregar producto -->
+        <div class="container-fluid mb-4">
+            <div class="row align-items-center">
+                <div class="col px-0">
+                    <h1 class="m-0 fs-3">Usuarios</h1>
+                </div>
+                <div class="col d-flex justify-content-end px-0">
+                    <a href="{% url 'usersApp:custom-admin-user-create' %}"
+                       class="text-decoration-none bg-primary text-primary-strong d-flex gap-2 align-items-center rounded pe-2 shadow-sm hover-scale-1">
+                        <div class="bg-primary-strong py-2 px-2 rounded-start h-100">
+                            <i class="fi fi-rr-pie fs-5 text-white-1"></i>
+                        </div>
+                        Agregar Usuario
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros de búsqueda -->
+        <section class="container-fluid">
+            <form method="get" class="row border-0 px-2 py-4 rounded-2 bg-white-2">
+                <!-- Filtros -->
+                <div class="col col-10">
+                    <h5 class="card-title mb-3 fs-5 text-dark-6">Filtros de búsqueda</h5>
+                    <div class="row">
+                        <div class="col col-4">
+                            {{ UserSearchForm.mail }}
+                        </div>
+                    </div>
+                </div>
+                <!-- Botón de búsqueda -->
+                <div class="col d-flex justify-content-end align-items-center">
+                    <button type="submit"
+                            class="btn btn-primary-strong text-white-2 d-flex gap-3 align-items-center hover-scale-1">
+                        <i class="fi fi-rr-search"></i>Buscar
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Listado de Productos -->
+        <section class="container-fluid mt-5">
+            <h3 class="fw-light text-dark-6">Listado de Usuarios</h3>
+            <!-- Productos encontrados -->
+            <div class="mt-3">
+                {% if user_list %}
+                    <p class="text-muted">Mostrando {{ user_list|length }} usuarios(s)</p>
+                    <div class="row row-cols-1 gy-3">
+                        {% for user in user_list %}
+                            <div class="col bg-white-2 rounded-2 shadow-sm p-3">
+                                <div class="row align-items-center">
+                                    <div class="col col-10">
+                                        <div class="row">
+                                            <div class="col col-2 d-flex align-items-center">
+                                                {% if user.avatar %}
+                                                    <img src="{{ user.avatar.url }}" class="img-fluid rounded-1" alt="{{ user.name }}">
+                                                {% else %}
+                                                    <img class="img-fluid p-4" src="{% static 'img/User.png' %}" alt="{{ user.name }}">
+                                                {% endif %}
+                                            </div>
+                                            <div class="col col-7 d-flex justify-content-between">
+                                                <div class="d-flex flex-column justify-content-between">
+                                                    <div>
+                                                        <h4>{{ user.name }}</h4>
+                                                        <p class="fw-light opacity-75">{{ user.mail }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col col-3 d-flex justify-content-end">
+                                                {% if user.is_active %}
+                                                	<h6>Estatus: <span class="badge text-bg-success text-white-2">Activo</span></h6>
+                                                {% else %}
+                                                    <h6>Estatus: <span class="badge text-bg-danger text-white-2">Inactivo</span></h6>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col">
+                                        <div class="row">
+                                            <div class="col d-flex gap-4 justify-content-end me-3">
+                                                <a href="{% url 'usersApp:custom-admin-user-update' user.pk %}" class="btn btn-success rounded-circle p-3 hover-scale-2 text-white-2"><i class="fi fi-rr-pencil"></i></a>
+                                                <button type="button" class="btn btn-danger rounded-circle p-3 hover-scale-2"
+                                                        onclick="prepareDeleteModal('{{ user.pk }}', '{{ user.name|escapejs }}')"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#deleteProductModal">
+                                                    <i class="fi fi-rr-trash text-white-2"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- Mensaje si no se encuentran productos -->
+                    <p>No se encontraron productos que coincidan con:</p>
+                    <ul>
+                        {% if query_params.product_name %}
+                            <li><strong>Nombre:</strong> {{ query_params.product_name }}</li>
+                        {% endif %}
+                        {% if query_params.product_category %}
+                            <li><strong>Categoría:</strong> {{ query_params.product_category }}</li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+                <section class="container-fluid px-0 mt-5">
+                    <!-- Mensaje de Paginación -->
+                    <div class="alert alert-secondary text-center">
+                        Página <strong>{{ page_obj.number }}</strong> de <strong>{{ page_obj.paginator.num_pages }}</strong>
+                    </div>
+
+                    <!-- Navegación de Páginas -->
+                    <nav class="row justify-content-center">
+                        <div class="col col-12">
+                            <ul class="pagination justify-content-center">
+                                <!-- Botón para Primera Página -->
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link link-primary-strong text-bg-primary-light" href="?page=1{% for key, value in query_params.items %}&{{ key }}={{ value }}{% endfor %}">
+                                            Primera
+                                        </a>
+                                    </li>
+                                    <li class="page-item h-100">
+                                        <a class="page-link link-primary-strong text-bg-primary-light" href="?page={{ page_obj.previous_page_number }}{% for key, value in query_params.items %}&{{ key }}={{ value }}{% endfor %}">
+                                            <i class="fi fi-rr-angle-left fs-4"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <!-- Páginas enumeradas -->
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if num == page_obj.number %}
+                                        <li class="page-item active">
+                                            <span class="page-link bg-primary-strong">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                                        <li class="page-item">
+                                            <a class="page-link text-primary-strong" href="?page={{ num }}{% for key, value in query_params.items %}&{{ key }}={{ value }}{% endfor %}">
+                                                {{ num }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Botón para Siguiente Página -->
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link link-primary-strong text-bg-primary-light" href="?page={{ page_obj.next_page_number }}{% for key, value in query_params.items %}&{{ key }}={{ value }}{% endfor %}">
+                                            <i class="fi fi-rr-angle-right fs-4"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link link-primary-strong text-bg-primary-light" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in query_params.items %}&{{ key }}={{ value }}{% endfor %}">
+                                            Última
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </nav>
+                </section>
+            {% endif %}
+        </section>
+    </section>
+
+    <!-- Modal de confirmación eliminar producto -->
+    <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 bg-danger text-white-2">
+                    <h5 class="modal-title" id="deleteProductModalLabel">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close bg-white-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body mt-2 mb-3">
+                    ¿Estás seguro que deseas eliminar el usuario "<span class="fw-bold" id="userNameSpan"></span>"?
+                </div>
+                <div class="modal-footer ">
+                    <form id="deleteUserForm" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger text-white-2 hover-scale-1 shadow-sm">Si, eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function prepareDeleteModal(userPK, userName) {
+            document.getElementById('userNameSpan').textContent = userName;
+            document.getElementById('deleteUserForm').action = "{% url 'usersApp:custom-admin-user-delete' '0' %}".replace('0', userPK);
+        }
+    </script>
+
+{% endblock user_list %}

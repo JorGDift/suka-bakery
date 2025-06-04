@@ -1,0 +1,160 @@
+{% extends 'suka_admin/base.html' %}
+
+{% block quotation_detail %}
+    <section class="container-fluid">
+
+            <!-- Lista de cotizaciones -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="fw-light text-dark-6 mb-0">Listado de cotizaciones</h3>
+                        {% if quotation_list %}
+                            <span class="badge bg-primary">{{ quotation_list|length }} cotización(es)</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if quotation_list %}
+                        {% for quote in quotation_list %}
+                            <div class="card mb-3 border-0 shadow-sm">
+                                <div class="card-header bg-transparent">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="h5 text-primary mb-0">#{{ quote.order_number }}</h3>
+                                        <span class="badge {% if quote.status == 'pending' %}bg-warning
+                                                     {% elif quote.status == 'confirmed' %}bg-success
+                                                     {% elif quote.status == 'canceled' %}bg-danger
+                                                     {% else %}bg-secondary{% endif %}">
+                                        {{ quote.get_status_display }}
+                                    </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Fechas -->
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fi fi-rr-calendar-lines me-2"></i>
+                                                <span><strong>Creación:</strong> {{ quote.created_at|date:"d/m/Y H:i" }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fi fi-rr-calendar-clock me-2"></i>
+                                                <span><strong>Actualización:</strong> {{ quote.updated_at|date:"d/m/Y H:i" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tabla de productos -->
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Producto</th>
+                                                    <th>Sabor</th>
+                                                    <th>Tamaño</th>
+                                                    <th class="text-center">Cantidad</th>
+                                                    <th class="text-end">Precio</th>
+                                                    <th class="text-end">Subtotal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for detail in quote.details.all %}
+
+                                                    <tr>
+                                                        <td>{{ detail.product.name }}</td>
+                                                        <td>{{ detail.cake_flavor.name }}</td>
+                                                        <td>{{ detail.cake_size.name }}</td>
+                                                        <td class="text-center">{{ detail.quantity }}</td>
+                                                        <td class="text-end">${{ detail.decoration_price|floatformat:2 }}</td>
+                                                        <td class="text-end">${{ subtotal|floatformat:2 }}</td>
+                                                    </tr>
+
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot class="table-light">
+                                                <tr>
+                                                    <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
+                                                    <td class="text-end"><strong>${{ quote.order_total|floatformat:2 }}</strong></td>
+                                                </tr>
+                                                {% if quote.delivery %}
+                                                    <tr>
+                                                        <td colspan="5" class="text-end">Costo de envío:</td>
+                                                        <td class="text-end">${{ quote.delivery.cost|floatformat:2 }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                <tr>
+                                                    <td colspan="5" class="text-end"><strong>Total Final:</strong></td>
+
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+
+                                    <!-- Resumen de costos -->
+                                    <div class="row">
+                                        <div class="col-md-5 col-lg-4 ms-auto">
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    {% for detail in quote.details.all %}
+                                                    <div class="mb-3">
+                                                        <h6 class="mb-2">{{ detail.product.name }} ({{ detail.quantity }})</h6>
+                                                        <div class="ps-3">
+                                                            <div class="d-flex justify-content-between small">
+                                                                <span>Precio base:</span>
+                                                                <span>${{ detail.product.price|floatformat:2 }}</span>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between small">
+                                                                <span>Sabor ({{ detail.cake_flavor.name }}):</span>
+                                                                <span>${{ detail.cake_flavor.price_per_slice|floatformat:2 }}</span>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between small">
+                                                                <span>Decoración:</span>
+                                                                <span>${{ detail.decoration_price|floatformat:2 }}</span>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between small fw-bold">
+                                                                <span>Total por unidad:</span>
+                                                                <span>${{ detail.item_unit_price|floatformat:2 }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+
+                                                    <hr class="my-2">
+
+                                                    <div class="d-flex justify-content-between mb-2">
+                                                        <span>Subtotal:</span>
+                                                        <strong>${{ quote.subtotal|floatformat:2 }}</strong>
+                                                    </div>
+                                                    {% if quote.delivery %}
+                                                        <div class="d-flex justify-content-between mb-2">
+                                                            <span>Envío ({{ quote.total_items }} pasteles):</span>
+                                                            <strong>${{ quote.shipping_cost|floatformat:2 }}</strong>
+                                                        </div>
+                                                        <div class="small text-muted mb-2">
+                                                            <span>Costo por pastel: ${{ quote.delivery.cost|floatformat:2 }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <hr class="my-2">
+                                                    <div class="d-flex justify-content-between">
+                                                        <h6 class="mb-0">Total Final:</h6>
+                                                        <strong>${{ quote.total|floatformat:2 }}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info m-0">
+                            <i class="fi fi-rr-info me-2"></i>
+                            No se encontraron cotizaciones que coincidan con los filtros aplicados.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+    </section>
+{% endblock quotation_detail %}

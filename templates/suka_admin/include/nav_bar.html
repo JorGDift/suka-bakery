@@ -1,0 +1,98 @@
+{% load static %}
+<div class="admin-slider-bar admin-slider-bar-close bg-primary-strong d-flex flex-column justify-content-between z-3 shadow-sm rounded" id="admin-slider-bar">
+    <div class="px-1 mt-3">
+        <div class="d-flex justify-content-center">
+            <img src=" {% static 'img/brand_bg.png' %} " alt="brand" class="img-fluid" style="height: 56px;">
+        </div>
+        <div class="mt-4 d-none d-lg-block">
+            <!--btn open close sliderbar para desktop -->
+            <div class="d-flex justify-content-center">
+                <button id="desktop-btn-activate-sliderbar" class="navbar-toggler border-0 shadow-none">
+                    <div class="demo">
+                        <div class="menu-icon">
+                            <input class="menu-icon__cheeckbox" type="checkbox" />
+                            <div>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+        <nav id="nav-link">
+            <div class="mt-4">
+                <a href="{% url 'coreApp:custom-admin-dashboard' %}" id="link" class="text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9">
+                    <i class="fi fi-rr-apps fs-6"></i>
+                    <p class="mb-0">
+                        Dashboard
+                    </p>
+                </a>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'usersApp:custom-admin-user-list' %}" id="link" class="text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9">
+                    <i class="fi fi-rr-users-alt fs-6"></i>
+                    <p class="mb-0">
+                        Usuarios
+                    </p>
+                </a>
+            </div>
+            <div class="mt-4">
+                <div class="colrounded-3">
+                    <button class="btn w-100 d-flex justify-content-center align-items-center p-0 faq-toggle" id="btn_collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuestion1" aria-expanded="false" aria-controls="collapseQuestion1">
+                        <div class="d-flex flex-column align-items-center gap-3 hover-bg-glass-1 p-3 rounded-3 w-100 text-white-1 fs-9" id="link">
+                            <i class="fi fi-rr-pie fs-6"></i>
+                            <p class="mb-0">
+                                Productos
+                            </p>
+                        </div>
+                    </button>
+                    <div class="collapse" id="collapseQuestion1">
+                        <div class="card card-body bg-primary-alpha-4 p-0">
+                            <a href="{% url 'productApp:product-list' %}" id="link" class="nav-link btn-children-drop-dowmn text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9 border-0">
+                                <i class="fi fi-rr-to-do fs-6"></i>
+                                <p class="mb-0">
+                                    Listado
+                                </p>
+                            </a>
+                            <a href="{% url 'productApp:admin-category-list' %}" id="link" class="nav-link text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9 mt-2">
+                                <i class="fi fi-rr-tags fs-6"></i>
+                                <p class="mb-0">
+                                    Categorías
+                                </p>
+                            </a>
+                            <a href="{% url 'productApp:admin-flavor-list' %}" id="link" class="nav-link text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9 mt-2">
+                                <i class="fi fi-rr-smile fs-6"></i>
+                                <p class="mb-0">
+                                    Sabores
+                                </p>
+                            </a>
+                            <a href="{% url 'productApp:admin-size-list' %}" id="link" class="nav-link text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9 mt-2">
+                                <i class="fi fi-rr-resize fs-6"></i>
+                                <p class="mb-0">
+                                    Tamaños
+                                </p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'quoteApp:suka_admin_quotation_list' %}" id="link" class="text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9">
+                    <i class="fi fi-rr-ballot fs-6"></i>
+                    <p class="mb-0">
+                        Cotizaciones
+                    </p>
+                </a>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'quoteApp:suka_admin_delivery_list' %}" id="link" class="text-decoration-none py-3 d-flex flex-column align-items-center gap-3 rounded-3 text-white-1 hover-bg-glass-1 px-3 fs-9">
+                    <i class="fi fi-rr-shipping-fast fs-6"></i>
+                    <p class="mb-0">
+                        Envios
+                    </p>
+                </a>
+            </div>
+        </nav>
+    </div>
+</div>

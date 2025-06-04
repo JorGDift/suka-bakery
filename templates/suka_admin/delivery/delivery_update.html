@@ -1,0 +1,303 @@
+{% extends 'suka_admin/base.html' %}
+{% load widget_tweaks %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    /* Estilos mejorados */
+    .order-header {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .status-badge {
+        font-size: 0.85rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50rem;
+    }
+
+    .badge-pending { background-color: #ffc107; color: #212529; }
+    .badge-delivered { background-color: #198754; }
+    .badge-canceled { background-color: #dc3545; }
+
+    .product-card {
+        transition: transform 0.2s;
+        border-left: 4px solid;
+    }
+    .product-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -1.5rem;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #adb5bd;
+        top: 3px;
+    }
+
+    .timeline-dot.active {
+        background: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+    }
+
+    .price-highlight {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block delivery_update %}
+<div class="container-fluid py-4">
+    {% if form.errors %}
+    <div class="alert alert-danger alert-dismissible fade show">
+        <strong>Error en el formulario:</strong>
+        <ul class="mb-0 mt-2">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li>{{ field|title }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <div class="row px-0 mb-5">
+        <div class="col d-flex px-0">
+            <a href="{% url 'quoteApp:suka_admin_delivery_list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                Regresar
+            </a>
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col">
+                <h4>Actualizar Envio</h4>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+
+
+        <div class="row bg-white-2 p-4 mb-4 mt-5 border-0 rounded-2">
+            <div class="col d-flex align-items-center gap-3">
+                <div>
+                    <i class="fi fi-rr-truck-delivery text-primary-strong"></i>
+                    <h5 class="mb-2">Número de Orden</h5>
+                    {{ form.order|attr:"value:"|add:delivery.order.order_number|stringformat:"s"|attr:"type:hidden" }}
+                    <p class="fs-4 text-primary-strong">{{ delivery.order.order_number }}</p>
+                </div>
+
+
+            </div>
+            <div class="col d-flex justify-content-end align-items-center gap-3">
+                <span class="badge text-bg-secondary">{{ delivery.get_status_display }}</span>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <!-- Columna izquierda - Información del pedido -->
+            <div class="col-lg-6 mb-4 border-0 ms-0 ps-0">
+                <div class="card h-100 border-0">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">Detalles del Pedido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Productos</h6>
+                            {% for detail in delivery.order.details.all %}
+                            <div class="product-card card mb-3 border-left-{% cycle 'primary' 'success' 'info' 'warning' as cardcolors %}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">{{ detail.product.name }}</h6>
+                                            <small class="text-muted">
+                                                {{ detail.cake_size.name }} | {{ detail.cake_flavor.name }}
+                                                {% if detail.decoration_price > 0 %}
+                                                + Decoración especial
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold">${{ detail.item_unit_price|floatformat:2 }}</div>
+                                            <small class="text-muted">x{{ detail.quantity }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="border-top pt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h6 class="text-muted">Subtotal</h6>
+                                    <div class="price-highlight fw-medium text-primary-strong">${{ delivery.order.subtotal|floatformat:2 }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <h6 class="text-muted">Costo de envío</h6>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.cost }}
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                                        <h6 class="mb-0">Total</h6>
+                                        <div class="price-highlight text-primary-strong">${{ delivery.order.total|floatformat:2 }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha - Información de envío -->
+            <div class="col-lg-6 border-0 me-0 pe-0">
+                <div class="card mb-4 border-0">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">Dirección de Entrega</h5>
+                    </div>
+                    <div class="card-body border-0">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Calle</label>
+                                {{ form.street }}
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Colonia</label>
+                                {{ form.neighborhood }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Código Postal</label>
+                                <input type="text" class="form-control" placeholder="Próximamente">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Número Exterior</label>
+                                {{ form.ext_number }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Número Interior (opcional)</label>
+                                {{ form.int_number }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4 border-0">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">Programación de Entrega</h5>
+                    </div>
+                    <div class="card-body border-0">
+                        <div class="mb-3">
+                            <label class="form-label">Fecha y Hora</label>
+                            {{ form.delivery_date }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Estado del Envío</label>
+                            <select name="status" class="form-select">
+                                {% for value, label in form.fields.status.choices %}
+                                    <option value="{{ value }}" {% if delivery.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-floating">
+                            <textarea class="form-control" placeholder="Instrucciones especiales" id="specialInstructions" style="height: 100px"></textarea>
+                            <label for="specialInstructions">Instrucciones especiales para el repartidor</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">Seguimiento</h5>
+                    </div>
+                    <div class="card-body border-0">
+                        <div class="timeline border-0">
+                            <div class="timeline-item">
+                                <div class="timeline-dot {% if delivery.status != 'pending' %}active{% endif %}"></div>
+                                <div>
+                                    <small class="text-muted">Pedido creado</small>
+                                    <p class="mb-0 small">{{ delivery.order.created_at|date:"d M Y H:i" }}</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-dot {% if delivery.status == 'delivered' %}active{% endif %}"></div>
+                                <div>
+                                    <small class="text-muted">En camino</small>
+                                    {% if delivery.status == 'delivered' %}
+                                    <p class="mb-0 small">{{ delivery.updated_at|date:"d M Y H:i" }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-dot {% if delivery.status == 'delivered' %}active{% endif %}"></div>
+                                <div>
+                                    <small class="text-muted">Entregado</small>
+                                    {% if delivery.status == 'delivered' %}
+                                    <p class="mb-0 small">{{ delivery.updated_at|date:"d M Y H:i" }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+
+
+    // Actualización dinámica del total cuando cambia el costo de envío
+    document.getElementById("id_cost").addEventListener("change", function() {
+        // Aquí podrías agregar lógica para recalcular el total
+        console.log("Costo de envío actualizado");
+    });
+</script>
+{% endblock %}

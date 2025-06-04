@@ -1,0 +1,352 @@
+{% extends 'suka_admin/base.html' %}
+{% load widget_tweaks %}
+{% block product_update %}
+    <section class="container-fluid">
+        <div class="container-lg">
+            <!-- Botón para regresar -->
+            <div class="row px-0">
+                <div class="col d-flex px-0">
+                    <a href="{% url 'productApp:product-list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                        <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                        Regresar
+                    </a>
+                </div>
+            </div>
+
+            <form class="row mb-4 mt-3" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="col">
+                    <h1 class="fs-3 fw-lighter">Actualizar Producto</h1>
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success text-white-2 d-flex align-items-center gap-2 shadow-sm hover-scale-1">
+                        <i class="fi fi-rr-check"></i>
+                        Actualizar Producto
+                    </button>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row mt-5 gx-4 p-0">
+                    <!-- Columna información general -->
+                    <div class="col rounded-2">
+                        <div class="bg-white-2 p-4 rounded-2">
+                            <h4>Información General</h4>
+                            <div class="row row-cols-1">
+                                <div class="col mt-2">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                    {% render_field form.name class="form-control" placeholder="Ej: Pastel de Chocolate Grande" %}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col mt-4">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                    {% render_field form.description class="form-control" rows="4" %}
+                                    {% if form.description.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.description.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row row-cols-2 mt-4">
+                                <div class="col mb-4">
+                                    <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
+                                    {% render_field form.price class="form-control" placeholder="0.00" %}
+                                    {% if form.price.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.price.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col mb-4">
+                                    <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                                    {% render_field form.category class="form-select" %}
+                                    {% if form.category.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.category.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col">
+                                    <label for="{{ form.size.id_for_label }}" class="form-label">{{ form.size.label }}</label>
+                                    {% render_field form.size class="form-select" %}
+                                    {% if form.size.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.size.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col">
+                                    <label for="{{ form.flavor.id_for_label }}" class="form-label">{{ form.flavor.label }}</label>
+                                    {% render_field form.flavor class="form-select" %}
+                                    {% if form.flavor.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.flavor.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna imágenes -->
+                    <div class="col rounded-2 pe-0">
+                        <div class="bg-white-2 p-4 rounded-2">
+                            <!-- Imágenes actuales -->
+                            <div id="currentImages" class="mb-4">
+                                <h5 class="mb-3">Imágenes actuales</h5>
+                                <div class="row g-2">
+                                    {% for image in object.images.all %}
+                                        <div class="col-4 position-relative image-container" data-image-id="{{ image.id }}">
+                                            <div class="position-relative">
+                                                <img src="{{ image.image.url }}" class="img-fluid rounded-2" alt="Imagen del producto">
+                                                <button type="button" class="btn btn-danger btn-sm delete-image d-flex justify-content-center align-items-center"
+                                                        style="height: 2rem; width: 2rem"
+                                                        onclick="removeCurrentImage(this)">
+                                                    <i class="fi fi-rr-trash text-white-2"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Zona para nuevas imágenes -->
+                            <div class="mb-3">
+                                <h5 class="mb-3">Agregar nuevas imágenes</h5>
+                                <div class="drop-zone">
+                                    <span class="drop-zone__prompt">
+                                        <i class="fas fa-cloud-upload-alt fs-2 mb-2"></i>
+                                        <br>
+                                        Arrastra tus archivos aquí o haz clic para seleccionar
+                                    </span>
+                                    {% render_field form.images class="d-none" %}
+                                </div>
+                                {% if form.images.errors %}
+                                    <div class="invalid-feedback" style="display:block;">
+                                        {% for error in form.images.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div id="imageHelp" class="form-text mt-2">
+                                    Formatos permitidos: JPG, PNG, JPEG, WebP. Máximo 4 imágenes, 5MB por imagen.
+                                </div>
+                            </div>
+
+                            <!-- Preview de nuevas imágenes -->
+                            <div id="newImagesPreview">
+                                <h5 class="mb-3 d-none" id="previewTitle">Imágenes nuevas a subir</h5>
+                                <div id="imagePreview" class="row g-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <style>
+        .position-relative {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .position-relative img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-container {
+            position: relative;
+        }
+
+        .delete-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-container:hover .delete-image {
+            opacity: 1;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border 0.3s ease;
+        }
+
+        .drop-zone:hover {
+            border-color: #999;
+        }
+
+        .drop-zone.dragover {
+            border-color: #2196f3;
+            background: rgba(33, 150, 243, 0.05);
+        }
+
+        .removed {
+            display: none;
+        }
+    </style>
+
+    {% block js %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Configuración inicial
+                const dropZone = document.querySelector('.drop-zone');
+                const fileInput = dropZone.querySelector('input[type="file"]');
+                const previewTitle = document.getElementById('previewTitle');
+                const imagePreview = document.getElementById('imagePreview');
+                const form = document.querySelector('form');
+
+                // Eventos de arrastre
+                ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                dropZone.addEventListener('dragover', () => {
+                    dropZone.classList.add('dragover');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('dragover');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    dropZone.classList.remove('dragover');
+                    const dt = e.dataTransfer;
+                    fileInput.files = dt.files;
+                    handleFiles(dt.files);
+                });
+
+                // Evento para selección manual de archivos
+                dropZone.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', function() {
+                    handleFiles(this.files);
+                });
+
+                // Función para manejar archivos nuevos
+                function handleFiles(files) {
+                    if (files.length > 0) {
+                        previewTitle.classList.remove('d-none');
+                        Array.from(files).forEach(file => createPreviewElement(file));
+                    }
+                }
+
+                // Función para crear elemento de vista previa
+                function createPreviewElement(file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const previewContainer = document.createElement('div');
+                        previewContainer.className = 'col-4 col-md-3';
+                        previewContainer.innerHTML = `
+                <div class="card border-0 shadow-sm position-relative">
+                    <img src="${e.target.result}" class="card-img-top" alt="Vista previa" style="height: 200px; object-fit: cover;">
+                    <div class="card-img-overlay d-flex align-items-start justify-content-end">
+                        <button type="button" class="btn btn-danger btn-sm rounded-circle d-flex align-items-center justify-content-center"
+                                style="height: 2rem; width: 2rem;">
+                            <i class="fi fi-rr-trash text-white-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+                        imagePreview.appendChild(previewContainer);
+
+                        const deleteButton = previewContainer.querySelector('.btn-danger');
+                        deleteButton.addEventListener('click', () => {
+                            previewContainer.remove();
+                            if (imagePreview.children.length === 0) {
+                                previewTitle.classList.add('d-none');
+                            }
+                            updateFileInput(file);
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                // Función para actualizar el input de archivos
+                function updateFileInput(fileToRemove) {
+                    const dt = new DataTransfer();
+                    const { files } = fileInput;
+
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        if (file !== fileToRemove) {
+                            dt.items.add(file);
+                        }
+                    }
+
+                    fileInput.files = dt.files;
+                }
+
+                // Función para eliminar imágenes existentes
+                window.removeCurrentImage = function(button) {
+                    const container = button.closest('.image-container');
+                    const imageId = container.dataset.imageId;
+
+                    // Crear o actualizar input oculto para imágenes a eliminar
+                    let deletedImagesInput = document.getElementById('images_to_delete');
+                    if (!deletedImagesInput) {
+                        deletedImagesInput = document.createElement('input');
+                        deletedImagesInput.type = 'hidden';
+                        deletedImagesInput.name = 'images_to_delete';
+                        deletedImagesInput.id = 'images_to_delete';
+                        form.appendChild(deletedImagesInput);
+                    }
+
+                    // Agregar el ID a la lista de eliminación
+                    const currentValues = deletedImagesInput.value ? deletedImagesInput.value.split(',') : [];
+                    if (!currentValues.includes(imageId)) {
+                        currentValues.push(imageId);
+                        deletedImagesInput.value = currentValues.join(',');
+                    }
+
+                    // Ocultar visualmente la imagen
+                    container.style.display = 'none';
+                };
+
+                // Asegurarse de que el formulario tenga el tipo correcto
+                form.setAttribute('enctype', 'multipart/form-data');
+            });
+        </script>
+    {% endblock js %}
+{% endblock product_update %}

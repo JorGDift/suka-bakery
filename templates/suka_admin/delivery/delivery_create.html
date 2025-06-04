@@ -1,0 +1,603 @@
+{% extends 'suka_admin/base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+
+    number-flow {
+  --number-flow-char-height: 0.85em;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.instructions {
+  color: gray;
+  text-align: center;
+  bottom: 0;
+  position: absolute;
+  padding: 1.5rem;
+  font-size: 0.875rem;
+  width: 100%;
+  left: 0;
+}
+
+
+        .status-badges .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        .hover-scale-1:hover {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .map-container {
+            position: relative;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-pending { background-color: #ffc107; }
+        .status-delivered { background-color: #198754; }
+        .status-canceled { background-color: #dc3545; }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        .floating-help {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+{% endblock %}
+
+{% block delivery_create %}
+
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+
+    <section class="container-fluid">
+        <div class="container-lg">
+            <!-- Navegación superior -->
+            <div class="row px-0 mb-4">
+                <div class="col-6 d-flex px-0">
+                    <a href="{% url 'quoteApp:suka_admin_delivery_list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                        <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                        Regresar
+                    </a>
+                </div>
+            </div>
+
+            <form class="needs-validation" method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Cabecera del formulario -->
+                <div class="row mb-4">
+                    <div class="col">
+                        <h1 class="fs-3 fw-lighter">Información de Envío</h1>
+                    </div>
+                    <div class="col d-flex justify-content-end gap-3">
+                        <button type="button" id="resetButton" class="btn btn-secondary d-flex align-items-center gap-2 shadow-sm hover-scale-1">
+                            <i class="fi fi-rr-refresh"></i>
+                            Limpiar
+                        </button>
+
+                        <button type="submit" class="btn btn-success text-white-2 d-flex align-items-center gap-2 shadow-sm hover-scale-1">
+                            <i class="fi fi-rr-check"></i>
+                            Guardar Envío
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resumen del Pedido -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="bg-white-2 p-4 rounded-2 shadow-sm">
+                            <h4 class="mb-4">
+                                Resumen del Pedido
+                            </h4>
+                            <div class="row g-4">
+                                <!-- Selector de Orden -->
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col col-4">
+                                            <div class="form-group">
+                                                <label for="id_order">{{ form.order.label }}</label>
+                                                {{ form.order }}
+                                                <div class="invalid-feedback">
+                                                    {{ form.order.errors }}
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Tarjetas de información -->
+                                <div class="col-md-3">
+                                    <div class="card border-0 bg-white-5 h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Total de Productos</h6>
+                                            <h5 class="card-title">
+                                                <h5 class="card-title" id="totalItems">$0</h5>
+                                            </h5>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-0 bg-white-5 h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Subtotal</h6>
+                                            <h5 class="card-title" id="subtotal">$0.00</h5>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-0 bg-white-5 h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Costo de Envío</h6>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                {{ form.cost }}
+                                                <div class="invalid-feedback">
+                                                    {{ form.cost.errors }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-0 bg-success h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Total</h6>
+                                            <h5 class="card-title" id="total">$0.00</h5>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de Dirección y Detalles -->
+                <div class="row gx-4">
+                    <!-- Columna de dirección -->
+                    <div class="col-md-6 mb-4">
+                        <div class="bg-white-2 p-4 rounded-2 shadow-sm h-100">
+                            <h4 class="mb-4">
+                                Dirección de Entrega
+                            </h4>
+
+                            <!-- Campos de dirección -->
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="id_street">{{ form.street.label }}</label>
+                                        {{ form.street }}
+                                    </div>
+
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="id_neighborhood">{{ form.neighborhood.label }}</label>
+                                        {{ form.neighborhood }}
+                                    </div>
+
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_ext_number">{{ form.ext_number.label }}</label>
+                                        {{ form.ext_number }}
+                                    </div>
+
+                                </div>
+                               <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_ext_number">{{ form.int_number.label }}</label>
+                                        {{ form.int_number }}
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna de detalles -->
+                    <div class="col-md-6 mb-4">
+                        <div class="bg-white-2 p-4 rounded-2 shadow-sm h-100">
+                            <h4 class="mb-4">
+                                Detalles de Entrega
+                            </h4>
+
+                            <!-- Fecha y hora de entrega -->
+                            <div class="mb-4">
+                                <label class="form-label">Fecha y Hora de Entrega</label>
+                                <div class="input-group">
+                                    {{ form.delivery_date }}
+                                </div>
+                            </div>
+
+                            <!-- Instrucciones especiales -->
+                            <div class="mb-4">
+                                <label class="form-label">Instrucciones Especiales</label>
+                                <textarea class="form-control" id="deliveryInstructions"
+                                          rows="4" placeholder="Instrucciones adicionales para el repartidor..."></textarea>
+                            </div>
+
+                            <!-- Timeline de seguimiento -->
+                            <div class="delivery-timeline">
+                                <h6 class="mb-3">Seguimiento</h6>
+                                <div class="timeline-item d-flex align-items-center mb-2">
+                                    <span class="status-indicator status-pending"></span>
+                                    <small class="text-muted">Pedido Creado</small>
+                                </div>
+                                <div class="timeline-item d-flex align-items-center mb-2">
+                                    <span class="status-indicator"></span>
+                                    <small class="text-muted">En Preparación</small>
+                                </div>
+                                <div class="timeline-item d-flex align-items-center">
+                                    <span class="status-indicator"></span>
+                                    <small class="text-muted">Entregado</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Contenedor de notificaciones -->
+        <div class="toast-container"></div>
+
+    </section>
+{% endblock delivery_create %}
+
+{% block js %}
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.8.0/countUp.umd.js"></script>
+
+    <script>
+        // ========== FUNCIONES GLOBALES ==========
+        // funcion para formatear valores (FLOAT)
+        function formatCurrency(value) {
+            return '$' + value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+         // funcion para formatear valores (INT)
+        function formatInteger(value) {
+            // Durante la animación usa 2 decimales, pero al final redondea
+            const isWholeNumber = value === Math.floor(value);
+            const formatted = isWholeNumber ?
+                value.toFixed(0) :
+                value.toFixed(2);
+
+            return formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function animateMonetaryValue(element, start, end, duration) {
+            if (!element) return;
+
+            let startTimestamp = null;
+            start = parseFloat(start) || 0;
+            end = parseFloat(end) || 0;
+
+            function step(timestamp) {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const elapsed = timestamp - startTimestamp;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const currentValue = start + (end - start) * (1 - Math.pow(1 - progress, 2));
+                element.textContent = formatCurrency(currentValue);
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    element.textContent = formatCurrency(end);
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        function animateIntValue(element, start, end, duration) {
+            if (!element) return;
+
+            let startTimestamp = null;
+            start = parseFloat(start) || 0;
+            end = parseFloat(end) || 0;
+
+            function step(timestamp) {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const elapsed = timestamp - startTimestamp;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const currentValue = start + (end - start) * (1 - Math.pow(1 - progress, 2));
+                element.textContent = formatInteger(currentValue);
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    element.textContent = formatInteger(end);
+                }
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        // al cargar el DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar el evento al input de costo
+            const costInput = document.querySelector('input[name="cost"]');
+            if (costInput) {
+                costInput.addEventListener('change', function() {
+                    const subtotalElement = document.getElementById('subtotal');
+                    const totalElement = document.getElementById('total');
+
+                    if (!subtotalElement || !totalElement) return;
+
+                    const subtotal = parseFloat(subtotalElement.textContent.replace(/[$,]/g, '')) || 0;
+                    const shipping = parseFloat(this.value) || 0;
+                    const newTotal = subtotal + shipping;
+
+                    const currentTotal = parseFloat(totalElement.textContent.replace(/[$,]/g, '')) || 0;
+                    animateMonetaryValue(totalElement, currentTotal, newTotal, 500);
+                });
+
+                // Validar entrada numérica
+                costInput.addEventListener('keypress', function(e) {
+                    const char = String.fromCharCode(e.keyCode);
+                    const pattern = /[0-9.]|\./;
+                    if (!pattern.test(char) ||
+                        (char === '.' && this.value.includes('.'))) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Formatear al perder el foco
+                costInput.addEventListener('blur', function() {
+                    if (this.value) {
+                        const value = parseFloat(this.value) || 0;
+                        this.value = value.toFixed(2);
+                    }
+                });
+            }
+        });
+
+
+        function showNotification(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body d-flex gap-2">
+                        <i class="fi fi-rr-${type === 'success' ? 'check' : 'info'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+
+            const toastContainer = document.querySelector('.toast-container');
+            if (toastContainer) {
+                toastContainer.appendChild(toast);
+
+                const bsToast = new bootstrap.Toast(toast, {
+                    delay: 3000
+                });
+                bsToast.show();
+
+                toast.addEventListener('hidden.bs.toast', () => {
+                    toast.remove();
+                });
+            }
+        }
+
+        function showLoadingState() {
+            const loadingIndicator = '<small class="text-muted"><i class="fi fi-rr-spinner me-2"></i>Cargando...</small>';
+            ['totalItems', 'subtotal', 'total'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.innerHTML = loadingIndicator;
+                }
+            });
+        }
+
+        // ========== FUNCIONES DE ACTUALIZACIÓN DE UI ==========
+        window.updateUIWithOrderData = function(data) {
+            const totalElement = document.getElementById('total');
+            const subtotalElement = document.getElementById('subtotal');
+            const totalItemsElement = document.getElementById('totalItems');
+
+            // Animar valores monetarios
+            if (totalElement) {
+                const currentTotal = parseFloat(totalElement.textContent.replace(/[$,]/g, '')) || 0;
+                animateMonetaryValue(totalElement, currentTotal, data.total, 500);
+            }
+
+            if (subtotalElement) {
+                const currentSubtotal = parseFloat(subtotalElement.textContent.replace(/[$,]/g, '')) || 0;
+                animateMonetaryValue(subtotalElement, currentSubtotal, data.subtotal, 500);
+            }
+
+            // Animar contador de productos
+            if (totalItemsElement) {
+                const currentValue = parseFloat(totalItemsElement.textContent) || 0;
+                animateIntValue(totalItemsElement, currentValue, data.total_items, 500);
+            }
+        };
+
+        // ========== FUNCIONES DE MANEJO DE DATOS ==========
+        async function updateOrderDetails(orderId) {
+            if (!orderId) {
+                showNotification('Por favor, seleccione una orden válida', 'warning');
+                return;
+            }
+
+            showLoadingState();
+
+            try {
+                console.log('Intentando cargar orden:', orderId);
+                const response = await fetch(`/api/orders/${orderId}/`);
+                console.log('Respuesta recibida:', response);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Datos recibidos de la API:', data);
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.total || !data.subtotal || !data.total_items) {
+                    console.error('Datos incompletos:', data);
+                    throw new Error('Datos incompletos en la respuesta');
+                }
+
+                const animationData = {
+                    total: parseFloat(String(data.total).replace(/[^0-9.-]+/g, '')),
+                    subtotal: parseFloat(String(data.subtotal).replace(/[^0-9.-]+/g, '')),
+                    total_items: parseInt(data.total_items || 0),
+                };
+
+                window.updateUIWithOrderData(animationData);
+                showNotification(`Orden #${data.order_number || orderId} cargada correctamente`, 'success');
+
+            } catch (error) {
+                console.error('Error detallado:', error);
+                showNotification(`Error al cargar los detalles del pedido: ${error.message}`, 'danger');
+                resetOrderDetails();
+            }
+        }
+
+        function resetOrderDetails() {
+            const form = document.querySelector('form');
+            if (form) {
+                form.reset();
+            }
+
+            if (window.currentMarker) {
+                window.currentMarker.setMap(null);
+            }
+
+            ['totalItems', 'subtotal', 'total'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = '$0';
+                }
+            });
+
+            // Resetear el input de costo
+            const costInput = document.querySelector('input[name="cost"]');
+            if (costInput) {
+                costInput.value = '0.00';
+            }
+
+            document.querySelectorAll('input[type="hidden"]')
+                .forEach(input => input.value = '');
+
+            showNotification('Formulario limpiado correctamente', 'info');
+        }
+
+
+        // ========== INICIALIZACIÓN ==========
+        document.addEventListener('DOMContentLoaded', function() {
+
+
+            // Inicializar valores
+            const totalElement = document.getElementById('total');
+            const subtotalElement = document.getElementById('subtotal');
+            const totalItemsElement = document.getElementById('totalItems');
+
+            if (totalElement) totalElement.textContent = '$0.00';
+            if (subtotalElement) subtotalElement.textContent = '$0.00';
+            if (totalItemsElement) totalItemsElement.textContent = '0';
+
+
+            // Event Listeners
+            const form = document.querySelector('form');
+            console.log(form)
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        form.classList.add('was-validated');
+                        showNotification('Por favor completa todos los campos requeridos', 'danger');
+                    } else if (confirm('¿Estás seguro de guardar este envío?')) {
+                        showNotification('Guardando información de envío...', 'info');
+                    }
+                });
+            }
+
+            const orderSelect = document.querySelector('[name="order"]');
+            if (orderSelect) {
+                orderSelect.addEventListener('change', function() {
+                    const orderId = this.value;
+                    orderId ? updateOrderDetails(orderId) : resetOrderDetails();
+                });
+            }
+
+            const resetButton = document.getElementById('resetButton');
+            if (resetButton) {
+                resetButton.addEventListener('click', resetOrderDetails);
+            }
+
+            // Inicializar tooltips
+            const tooltipTriggerList = [].slice.call(
+                document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            );
+            tooltipTriggerList.map(tooltipTriggerEl =>
+                new bootstrap.Tooltip(tooltipTriggerEl)
+            );
+        });
+
+        // Hacer disponible updateOrderDetails globalmente
+        window.updateOrderDetails = updateOrderDetails;
+    </script>
+{% endblock js %}

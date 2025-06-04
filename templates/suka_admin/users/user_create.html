@@ -1,0 +1,231 @@
+{% extends 'suka_admin/base.html' %}
+{% load widget_tweaks %}
+{% block user_create %}
+
+    <section class="container-fluid">
+        <div class="container-lg">
+            <!-- Botón para regresar -->
+            <div class="row px-0">
+                <div class="col d-flex px-0">
+                    <a href="{% url 'usersApp:custom-admin-user-list' %}" class="text-decoration-none link-primary-strong d-flex gap-3 hover-scale-1">
+                        <i class="fi fi-rr-angle-left link-primary-strong"></i>
+                        Regresar
+                    </a>
+                </div>
+            </div>
+
+            <form class="row mb-4 mt-3" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="col">
+                    <h1 class="fs-3 fw-lighter">Registrar Nuevo Usuario</h1>
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success text-white-2 d-flex align-items-center gap-2 shadow-sm hover-scale-1">
+                        <i class="fi fi-rr-check"></i>
+                        Registrar Usuario
+                    </button>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row mt-5 gx-4 p-0">
+                    <div class="col rounded-2">
+                        <div class="bg-white-2 p-4 rounded-2">
+                            <h4>Información Básica</h4>
+                            <div class="row row-cols-1">
+                                <div class="col mt-2">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                    {% render_field form.name class="form-control" placeholder="Ej: Juan" %}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col mt-4">
+                                    <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+                                    {% render_field form.last_name class="form-control" placeholder="Ej: Pérez" %}
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.last_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row row-cols-2 mt-4">
+                                <div class="col mb-4">
+                                    <label for="{{ form.mail.id_for_label }}" class="form-label">{{ form.mail.label }}</label>
+                                    {% render_field form.mail class="form-control" placeholder="Ej: usuario@example.com" %}
+                                    {% if form.mail.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.mail.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col mb-4">
+                                    <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                                    {% render_field form.phone class="form-control" placeholder="Ej: +51987654321" %}
+                                    {% if form.phone.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.phone.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white-2 p-4 rounded-2 mt-4">
+                            <h4>Credenciales de Acceso</h4>
+                            <div class="row row-cols-1">
+                                <div class="col mt-2">
+                                    <label for="{{ form.password1.id_for_label }}" class="form-label">Contraseña</label>
+                                    {% render_field form.password1 class="form-control" %}
+                                    {% if form.password1.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.password1.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Mínimo 8 caracteres, no puede ser completamente numérica.</div>
+                                </div>
+
+                                <div class="col mt-4">
+                                    <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmar Contraseña</label>
+                                    {% render_field form.password2 class="form-control" %}
+                                    {% if form.password2.errors %}
+                                        <div class="invalid-feedback" style="display:block;">
+                                            {% for error in form.password2.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col rounded-2 pe-0">
+                        <div class="bg-white-2 p-4 rounded-2">
+                            <h4>Foto de Perfil</h4>
+                            <div class="mb-3">
+                                <label for="{{ form.avatar.id_for_label }}" class="form-label">Imagen del usuario</label>
+                                <div class="drop-zone">
+                                    <span class="drop-zone__prompt">
+                                        <i class="fas fa-cloud-upload-alt fs-2 mb-2"></i>
+                                        <br>
+                                        Arrastra tu foto aquí o haz clic para seleccionar
+                                    </span>
+                                    {% render_field form.avatar %}
+                                </div>
+                                {% if form.avatar.errors %}
+                                    <div class="invalid-feedback" style="display:block;">
+                                        {% for error in form.avatar.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div id="imageHelp" class="form-text mt-2">
+                                    Formatos permitidos: JPG, PNG, JPEG. Máximo 5MB.
+                                </div>
+                            </div>
+                            <div id="imagePreview" class="row g-2 mt-2"></div>
+                        </div>
+
+                        <div class="bg-white-2 p-4 rounded-2 mt-4">
+                            <h4>Permisos</h4>
+                            <div class="form-check form-switch mt-3">
+                                {% render_field form.is_active class="form-check-input" %}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Activo</label>
+                            </div>
+                            <div class="form-text">Desmarcar para desactivar la cuenta temporalmente.</div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.querySelector('.drop-zone');
+            const fileInput = dropZone.querySelector('input[type="file"]');
+
+            // Eventos de arrastre
+            ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+
+            dropZone.addEventListener('dragover', () => {
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                dropZone.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                updateThumbnail(fileInput.files);
+            });
+
+            fileInput.addEventListener('change', function() {
+                updateThumbnail(this.files);
+            });
+        });
+
+        function updateThumbnail(files) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+
+            if (files && files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'col-12';
+                    div.innerHTML = `
+                        <div class="card border-0 shadow-sm">
+                            <img src="${e.target.result}" class="card-img-top" alt="Vista previa" style="max-height: 300px; object-fit: contain;">
+                            <div class="card-img-overlay d-flex align-items-end justify-content-end">
+                                <button type="button" class="btn btn-danger btn-sm rounded-circle" style="height: 2rem; width: 2rem">
+                                    <i class="fi fi-rr-trash text-white-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    preview.appendChild(div);
+
+                    // Agregar funcionalidad para eliminar imagen
+                    div.querySelector('.btn-danger').addEventListener('click', () => {
+                        preview.innerHTML = '';
+                        fileInput.value = '';
+                    });
+                }
+                reader.readAsDataURL(files[0]);
+            }
+        }
+    </script>
+
+{% endblock user_create %}

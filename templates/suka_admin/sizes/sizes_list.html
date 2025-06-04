@@ -1,0 +1,117 @@
+{% extends 'suka_admin/base.html' %}
+{% load static %}
+{% block size_list %}
+    <div class="container-sm">
+        <!-- Botón para agregar producto -->
+        <div class="container-fluid mb-4">
+            <div class="row align-items-center">
+                <div class="col px-0">
+                    <h1 class="m-0 fs-3">Tamaños</h1>
+                </div>
+                <div class="col d-flex justify-content-end px-0">
+                    <a href="{% url 'productApp:admin-size-create' %}"
+                       class="text-decoration-none bg-primary text-primary-strong d-flex gap-2 align-items-center rounded pe-2 shadow-sm hover-scale-1">
+                        <div class="bg-primary-strong py-2 px-2 rounded-start h-100">
+                            <i class="fi fi-rr-tags fs-5 text-white-1"></i>
+                        </div>
+                        Agregar Tamaño
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- Listado de Productos -->
+        <section class="container-fluid mt-5 px-0">
+            <!-- Productos encontrados -->
+            <div class="mt-3">
+                {% if size_list %}
+                    <div class="row">
+                        <div class="col">
+                            <h3 class="fw-light text-dark-6">Listado de Tamaños</h3>
+                        </div>
+                        <div class="col d-flex justify-content-end">
+                            <h6>Mostrando <span class="badge text-bg-secondary">{{ size_list|length }} tamaño(s)</span></h6>
+                        </div>
+                    </div>
+                    <div class="row row-cols-1 gy-3">
+                        {% for size in size_list %}
+                            <div class="col bg-white-2 p-3 rounded-2 shadow-sm">
+                                <div class="row">
+                                    <div class="col col-2 d-flex align-items-center">
+                                        <div class="bg-success p-2" style="height: 5rem; width: 5rem;">
+                                            <div class="bg-success-subtle d-flex align-items-center" style="height: 4rem; width: 8rem;">
+                                                <h6 class="mb-0 ms-4 fw-semibold">{{ size.name }}</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col d-flex flex-column justify-content-center">
+                                        {% if size.products.exist %}
+                                            <h6 class="fs-7 mb-3">Últimos 5 productos agregados</h6>
+                                            {% for product in size.products.all|slice:":5" %}
+                                                <div class="mb-2">
+                                                    <a href="{% url 'productApp:admin-product-update' size.pk %}" class="d-flex gap-1 text-decoration-none link-dark-3 link-opacity-25-hover">
+                                                        <i class="fi fi-rr-cube me-2"></i>
+                                                        {{ size.name }}
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-muted d-flex gap-2 mb-0">
+                                                <i class="fi fi-rr-info me-2"></i>
+                                                No hay productos en este tamaño
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col d-flex align-items-center justify-content-end">
+                                        <div class="row">
+                                            <div class="col d-flex gap-4 justify-content-end me-3">
+                                                <a href="{% url 'productApp:admin-size-update' size.pk %}" class="btn btn-success rounded-circle p-3 hover-scale-2 text-white-2"><i class="fi fi-rr-pencil"></i></a>
+                                                <button type="button" class="btn btn-danger rounded-circle p-3 hover-scale-2"
+                                                        onclick="prepareDeleteModal('{{ size.pk }}', '{{ size.name|escapejs }}')"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#deleteProductModal">
+                                                    <i class="fi fi-rr-trash text-white-2"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No hay sabores disponibles</p>
+                {% endif %}
+            </div>
+
+        </section>
+    </div>
+
+
+    <!-- Modal de confirmación eliminar producto -->
+    <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 bg-danger text-white-2">
+                    <h5 class="modal-title" id="deleteProductModalLabel">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close bg-white-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body mt-2 mb-3">
+                    ¿Estás seguro que deseas eliminar el tamaño "<span class="fw-bold" id="sizeName"></span>"?
+                </div>
+                <div class="modal-footer ">
+                    <form id="deleteSizeForm" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger text-white-2 hover-scale-1 shadow-sm">Si, eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function prepareDeleteModal(sizePk, sizeName) {
+            document.getElementById('sizeName').textContent = sizeName;
+            document.getElementById('deleteSizeForm').action = "{% url 'productApp:admin-size-deleted' '0' %}".replace('0', sizePk);
+        }
+    </script>
+{% endblock size_list %}

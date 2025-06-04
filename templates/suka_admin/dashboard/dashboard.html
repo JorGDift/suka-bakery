@@ -1,0 +1,209 @@
+{% extends 'suka_admin/base.html' %}
+{% block dashboard %}
+
+    {% block link %}
+    	<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js'></script>
+    {% endblock %}
+
+
+
+    <section class="container-lg">
+        <div class="row mb-4">
+            <div class="col px-0">
+                <h2>Dashboard</h2>
+            </div>
+        </div>
+
+        <div class="row gx-4">
+            <div class="col col-8">
+                <div class="row">
+                    <!-- Contenido -->
+                    <div class="col col-12">
+                        <div class="row gy-3">
+                            <div class="col col-12 px-0">
+                                <div class="row gx-3">
+                                    <div class="col">
+                                        <div class="d-flex flex-column gap-4 card border-0 shadow-sm p-3 hover-scale-1">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="bg-success rounded-circle p-2">
+                                                    <i class="fi fi-rr-settings-sliders fs-7"></i>
+                                                </div>
+                                                <h6 class="mb-0">Productos</h6>
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <h5 class="mb-0">{{ total_products }}</h5>
+                                                <p class="mb-0 opacity-50">Productos totales</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="d-flex flex-column gap-4 card border-0 shadow-sm p-3 hover-scale-1">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="bg-success rounded-circle p-2">
+                                                    <i class="fi fi-rr-settings-sliders fs-7"></i>
+                                                </div>
+                                                <h6 class="mb-0">Envios</h6>
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <h5 class="mb-0">{{ total_delivery_pending }}</h5>
+                                                <p class="mb-0 opacity-50">Envios pendientes</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col col-6">
+                                        <div class="d-flex flex-column gap-4 card border-0 shadow-sm p-3 hover-scale-1">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="bg-success rounded-circle p-2">
+                                                    <i class="fi fi-rr-settings-sliders fs-7"></i>
+                                                </div>
+                                                <h6 class="mb-0">Envios</h6>
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <h5 class="mb-0">{{ total_delivery_delivered }}</h5>
+                                                <p class="mb-0 opacity-50">Envios realizados</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col px-0">
+                                <div class="row gx-3">
+                                    <div class="col col-8">
+                                        <div class="card border-0 shadow-sm p-3 h-100 d-flex flex-column justify-content-between hover-scale-1">
+                                            <div class="">
+                                                <p class="opacity-50 fw-bold">Datos de envios</p>
+                                            </div>
+                                            <div>
+                                                <canvas id="enviosMesChart" width="700" height="350"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col col-4">
+                                        <div class="card border-0 shadow-sm p-3 hover-scale-1">
+                                            <div>
+                                                <canvas id="miDoughnutChart" width="400" height="400"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col col-12">
+
+                    </div>
+                </div>
+            </div>
+            <div class="col  ms-1">
+                <div class="p-3 card border-0 shadow-sm h-100">
+                    <div class="text-primary-strong" id='calendar'></div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+  const enviosPorMes = {{ envios_por_mes|safe }};
+  const ordenesPorEstado = {{ ordenes_por_estado|safe }};
+
+  // Gráfica de envíos por mes (barras)
+  const ctxEnvios = document.getElementById('enviosMesChart').getContext('2d');
+  new Chart(ctxEnvios, {
+    type: 'bar',
+    data: {
+      labels: [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      ],
+      datasets: [{
+        label: 'Envíos entregados por mes',
+        data: enviosPorMes,
+        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 2,
+        borderRadius: 6,
+        maxBarThickness: 45
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Envíos entregados por mes',
+          font: { size: 20, weight: 'bold' },
+          padding: { top: 15, bottom: 25 }
+        },
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: ctx => `Envíos: ${ctx.parsed.y}` }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 14 } }, grid: { color: '#e0e0e0' } },
+        x: { ticks: { font: { size: 14 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Gráfica doughnut de órdenes por estado
+  const ctxOrdenes = document.getElementById('miDoughnutChart').getContext('2d');
+  new Chart(ctxOrdenes, {
+    type: 'doughnut',
+    data: {
+      labels: ['Pendientes', 'Confirmadas', 'Enviadas', 'Canceladas'],
+      datasets: [{
+        label: 'Órdenes por estado',
+        data: [
+          ordenesPorEstado.pending || 0,
+          ordenesPorEstado.confirmed || 0,
+          ordenesPorEstado.shipped || 0,
+          ordenesPorEstado.canceled || 0,
+        ],
+        backgroundColor: [
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(255, 99, 132, 0.7)',
+        ],
+        borderColor: [
+          'rgba(255, 206, 86, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(255, 99, 132, 1)',
+        ],
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Órdenes por Estado',
+          font: { size: 20, weight: 'bold' },
+          padding: { top: 20, bottom: 30 }
+        },
+        legend: { position: 'right', labels: { font: { size: 14 } } },
+        tooltip: {
+          callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} órdenes` }
+        }
+      }
+    }
+  });
+</script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth'
+            });
+            calendar.render();
+        });
+    </script>
+{% endblock dashboard %}
